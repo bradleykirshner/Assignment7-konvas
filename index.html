@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake Game with Konva</title>
+    <script src="https://cdn.jsdelivr.net/npm/konva@8.3.13/konva.min.js"></script>
+    <style>
+      #grid {
+        border: 2px solid black;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>Snake Game</h1>
+      <p id="score">Score: 0</p>
+      <div id="grid"></div>
+    </div>
+
+    <script>
+      // grid variables
+      var cellSize = 25;
+      var row = 20;
+      var col = 20;
+      var stage;
+      var layer;
+
+      // snake variables
+      var snake = [];
+      var snakex = cellSize * 5;
+      var snakey = cellSize * 5;
+      var snakeHead;
+
+      // food variables
+      var foodx;
+      var foody;
+      var foodShape;
+
+      // move variables
+      var movex = 0;
+      var movey = 0;
+
+      // game variables
+      var gameFlag = false;
+      var score = 0;
+
+      window.onload = function () {
+        // Create stage
+        stage = new Konva.Stage({
+          container: "grid",
+          width: col * cellSize,
+          height: row * cellSize,
+        });
+
+        // Create layer
+        layer = new Konva.Layer();
+        stage.add(layer);
+
+        // Draw the initial snake
+        snakeHead = new Konva.Rect({
+          x: snakex,
+          y: snakey,
+          width: cellSize,
+          height: cellSize,
+          fill: "blue",
+        });
+        layer.add(snakeHead);
+
+        // Place food
+        placeFood();
+
+        // Listen for keystrokes
+        document.addEventListener("keyup", key);
+
+        // Update game every 100 ms
+        setInterval(update, 100);
+      };
+
+      function update() {
+        // End game if gameFlag is true
+        if (gameFlag == true) {
+          return;
+        }
+
+        // Move snake head
+        snakex += movex * cellSize;
+        snakey += movey * cellSize;
+        snakeHead.position({ x: snakex, y: snakey });
+
+        // If snake eats food
+        if (snakex == foodx && snakey == foody) {
+          snake.push([foodx, foody]);
+          score += 1;
+          document.getElementById("score").textContent = "Score: " + score;
+          placeFood();
+        }
+
+        // Move snake's body
+        for (let i = snake.length - 1; i > 0; i--) {
+          snake[i] = snake[i - 1];
+        }
+        if (snake.length) {
+          snake[0] = [snakex, snakey];
+        }
+
+        // Draw snake's body
+        for (let i = 0; i < snake.length; i++) {
+          let snakePart = new Konva.Rect({
+            x: snake[i][0],
+            y: snake[i][1],
+            width: cellSize,
+            height: cellSize,
+            fill: "blue",
+          });
+          layer.add(snakePart);
+        }
+
+        // Detect if snake hits the wall
+        if (
+          snakex < 0 ||
+          snakex >= col * cellSize ||
+          snakey < 0 ||
+          snakey >= row * cellSize
+        ) {
+          gameFlag = true;
+          alert("Game over: snake hit the wall");
+        }
+
+        // Detect if snake hits itself
+        for (let i = 0; i < snake.length; i++) {
+          if (snakex == snake[i][0] && snakey == snake[i][1]) {
+            gameFlag = true;
+            alert("Game over: snake hit itself");
+          }
+        }
+
+        layer.draw(); // Redraw the layer
+      }
+
+      function placeFood() {
+        // Generate food position
+        foodx = Math.floor(Math.random() * (col - 1)) * cellSize;
+        foody = Math.floor(Math.random() * (row - 1)) * cellSize;
+
+        // Remove old food shape if it exists
+        if (foodShape) {
+          foodShape.remove();
+        }
+
+        // Create new food shape
+        foodShape = new Konva.Rect({
+          x: foodx,
+          y: foody,
+          width: cellSize,
+          height: cellSize,
+          fill: "red",
+        });
+        layer.add(foodShape);
+      }
+
+      function key(keyStroke) {
+        // Move snake up
+        if (
+          (keyStroke.code == "ArrowUp" || keyStroke.code == "KeyW") &&
+          movey != 1
+        ) {
+          movex = 0;
+          movey = -1;
+        }
+        // Move snake down
+        else if (
+          (keyStroke.code == "ArrowDown" || keyStroke.code == "KeyS") &&
+          movey != -1
+        ) {
+          movex = 0;
+          movey = 1;
+        }
+        // Move snake left
+        else if (
+          (keyStroke.code == "ArrowLeft" || keyStroke.code == "KeyA") &&
+          movex != 1
+        ) {
+          movex = -1;
+          movey = 0;
+        }
+        // Move snake right
+        else if (
+          (keyStroke.code == "ArrowRight" || keyStroke.code == "KeyD") &&
+          movex != -1
+        ) {
+          movex = 1;
+          movey = 0;
+        }
+      }
+    </script>
+  </body>
+</html>
